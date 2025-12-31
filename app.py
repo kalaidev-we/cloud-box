@@ -74,12 +74,17 @@ def create_app():
         if not os.path.exists(app.config['UPLOAD_FOLDER']):
             os.makedirs(app.config['UPLOAD_FOLDER'])
             
-        # Create Default Admin
+        # Create/Update Default Admin
         admin = User.query.filter_by(username='admin').first()
         if not admin:
             admin_user = User(username='admin', password_hash=generate_password_hash('admin'), is_admin=True, storage_limit=5120)
             db.session.add(admin_user)
             db.session.commit()
+        else:
+            # Ensure existing admin user has admin privileges
+            if not admin.is_admin:
+                admin.is_admin = True
+                db.session.commit()
     return app
 
 if __name__ == '__main__':

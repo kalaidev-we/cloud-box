@@ -27,6 +27,10 @@ def dashboard():
     total_used_bytes = sum(f.size for f in all_files)
     total_used_mb = round(total_used_bytes / (1024 * 1024), 2)
     
+    # Calculate global allocated space (Quota)
+    total_allocated_mb = sum(getattr(u, 'storage_limit', 5120) for u in users)
+    total_unused_allocated_mb = total_allocated_mb - total_used_mb
+    
     # User stats for table
     users_data = []
     for user in users:
@@ -48,6 +52,8 @@ def dashboard():
     return render_template('admin.html', 
                            total_users=total_users, 
                            total_used_mb=total_used_mb,
+                           total_allocated_mb=total_allocated_mb,
+                           total_unused_mb=total_unused_allocated_mb,
                            users=users_data)
 
 @admin_bp.route('/admin/delete_user/<int:user_id>', methods=['POST'])
