@@ -156,8 +156,13 @@
                 <div class="modal-body">
                     <input type="hidden" name="file_id" id="shareFileId">
                     <div class="mb-3">
-                        <label class="form-label">Username to share with</label>
-                        <input type="text" name="username" class="form-control" required>
+                        <label class="form-label">User to share with</label>
+                        <select name="username" class="form-select" required>
+                            <option value="" disabled selected>Select a user...</option>
+                            {% for u in users %}
+                            <option value="{{ u.username }}">{{ u.username }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Role</label>

@@ -30,13 +30,16 @@ def dashboard(folder_id=None):
         shared_permissions = Permission.query.filter_by(user_id=current_user.id).all()
         shared_files = [p.file for p in shared_permissions]
 
+    # Get list of other users for sharing dropdown
+    other_users = User.query.filter(User.id != current_user.id).all()
+
     breadcrumbs = []
     curr = current_folder
     while curr:
         breadcrumbs.insert(0, curr)
         curr = curr.parent
 
-    return render_template('dashboard.html', files=files, shared_files=shared_files, current_folder=current_folder, breadcrumbs=breadcrumbs)
+    return render_template('dashboard.html', files=files, shared_files=shared_files, current_folder=current_folder, breadcrumbs=breadcrumbs, users=other_users)
 
 def check_access(file_record, user):
     if file_record.owner_id == user.id:

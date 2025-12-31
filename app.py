@@ -5,9 +5,10 @@ import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key-change-in-prod' # TODO: Use env var
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'storage')
+# Use persistent storage path for DB
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(app.config['UPLOAD_FOLDER'], 'database.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
 db.init_app(app)
@@ -25,9 +26,7 @@ app.register_blueprint(main_blueprint)
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-@app.route('/')
-def home():
-    return render_template('login.html') # Temporary redirect to login
+# Removed app.route('/') to allow main.dashboard to handle it
 
 def create_app():
     with app.app_context():
