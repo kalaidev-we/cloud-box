@@ -82,7 +82,8 @@
                         <label class="form-label fw-bold">Storage Usage</label>
                         <div class="progress mb-1" style="height: 20px;">
                             <div class="progress-bar {% if storage_percent > 90 %}bg-danger{% elif storage_percent > 70 %}bg-warning{% else %}bg-success{% endif %}"
-                                role="progressbar" style="width: {{ storage_percent }}%;">
+                                role="progressbar" id="storageProgressBar" aria-valuenow="{{ storage_percent }}"
+                                aria-valuemin="0" aria-valuemax="100">
                             </div>
                         </div>
                         <small class="text-muted d-flex justify-content-between">
@@ -119,6 +120,13 @@
                 localStorage.setItem('theme', 'light');
             }
         });
+
+        // Initialize Progress Bar
+        const progressBar = document.getElementById('storageProgressBar');
+        if (progressBar) {
+            const width = progressBar.getAttribute('aria-valuenow');
+            progressBar.style.width = width + '%';
+        }
     </script>
 </body>
 
