@@ -236,4 +236,16 @@ def delete_file(file_id):
     db.session.delete(file_record)
     db.session.commit()
     flash('Item deleted', 'success')
+    flash('Item deleted', 'success')
     return redirect(url_for('main.dashboard', folder_id=file_record.parent_id))
+
+@main.context_processor
+def inject_storage_usage():
+    if current_user.is_authenticated:
+        my_files = File.query.filter_by(owner_id=current_user.id, is_folder=False).all()
+        used_bytes = sum(f.size for f in my_files)
+        used_mb = round(used_bytes / (1024 * 1024), 2)
+        limit_mb = 1024 # 1GB Limit hardcoded for MVP
+        percentage = round((used_mb / limit_mb) * 100, 1)
+        return dict(storage_used=used_mb, storage_limit=limit_mb, storage_percent=percentage)
+    return dict(storage_used=0, storage_limit=1024, storage_percent=0)
