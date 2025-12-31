@@ -5,15 +5,32 @@
     --text-dark: #333;
     --card-bg: #fff;
     --border-color: rgba(0, 0, 0, 0.1);
+    --input-bg: #fff;
+    --input-border: #ced4da;
+    --input-text: #495057;
 }
 
 [data-theme="dark"] {
-    --primary-color: #5d9cec;
-    --secondary-color: #ecf0f1;
-    --background-light: #1a1a1a;
-    --text-dark: #f0f0f0;
-    --card-bg: #2d2d2d;
-    --border-color: rgba(255, 255, 255, 0.1);
+    --primary-color: #60a5fa;
+    /* Blue 400 */
+    --secondary-color: #e2e8f0;
+    /* Slate 200 */
+    --background-light: #0f172a;
+    /* Slate 900 */
+    --text-dark: #f8fafc;
+    /* Slate 50 - Almost White */
+    --text-muted: #94a3b8;
+    /* Slate 400 */
+    --card-bg: #1e293b;
+    /* Slate 800 */
+    --border-color: #334155;
+    /* Slate 700 */
+    --input-bg: #334155;
+    /* Slate 700 */
+    --input-border: #475569;
+    /* Slate 600 */
+    --input-text: #f1f5f9;
+    /* Slate 100 */
 }
 
 body {
@@ -24,8 +41,8 @@ body {
 }
 
 .card {
-    border: none;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     border-radius: 12px;
     background-color: var(--card-bg);
     color: var(--text-dark);
@@ -36,17 +53,20 @@ body {
     border: none;
     padding: 10px 20px;
     border-radius: 8px;
-    transition: all 0.3s ease;
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
 .btn-primary:hover {
-    background-color: #357abd;
+    filter: brightness(110%);
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
 }
 
 .navbar {
     background-color: var(--card-bg) !important;
-    box-shadow: 0 2px 4px var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: none;
 }
 
 .navbar-brand {
@@ -56,10 +76,17 @@ body {
 
 .nav-link {
     color: var(--text-dark) !important;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.nav-link:hover {
+    opacity: 1;
 }
 
 .table {
     color: var(--text-dark);
+    border-color: var(--border-color);
 }
 
 .table-light {
@@ -67,33 +94,189 @@ body {
     color: var(--text-dark);
 }
 
-/* Dark mode specific for tables to override bootstrap */
+/* Dark mode specific for tables */
 [data-theme="dark"] .table-hover tbody tr:hover {
     color: var(--text-dark);
     background-color: rgba(255, 255, 255, 0.05);
 }
 
 [data-theme="dark"] .table-light {
-    background-color: #333;
-    color: #fff;
+    background-color: #0f172a;
+    /* Match body bg */
+    color: var(--text-dark);
+    border-bottom: 1px solid var(--border-color);
 }
 
 [data-theme="dark"] .modal-content {
     background-color: var(--card-bg);
     color: var(--text-dark);
+    border: 1px solid var(--border-color);
 }
 
-[data-theme="dark"] .form-control,
-[data-theme="dark"] .form-select {
-    background-color: #333;
-    border-color: #444;
-    color: #fff;
+[data-theme="dark"] .modal-header,
+[data-theme="dark"] .modal-footer {
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .close {
+    color: var(--text-dark);
+}
+
+.form-control,
+.form-select {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--input-text);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(66, 153, 225, 0.25);
+}
+
+/* Scrollbar styling for webkit */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
 }
 
 .folder-icon {
-    color: #f7d794;
+    color: #fca5a5;
+    /* Red/Orange-ish for folders in dark mode looks nice, but keeping close to standard */
+}
+
+[data-theme="dark"] .folder-icon {
+    color: #fdba74;
+    /* Orange 300 */
 }
 
 .file-icon {
-    color: #a4b0be;
+    color: #94a3b8;
+    /* Slate 400 */
+}
+
+/* Breadcrumb improvements */
+.breadcrumb {
+    background-color: var(--card-bg) !important;
+    border: 1px solid var(--border-color);
+}
+
+.breadcrumb-item a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.breadcrumb-item.active {
+    color: var(--text-dark);
+    opacity: 0.7;
+}
+
+/* Badge Tweaks */
+.badge.bg-success {
+    background-color: #22c55e !important;
+    /* Green 500 */
+    color: #fff;
+}
+
+/* Typography Enhancements for Dark Mode */
+[data-theme="dark"] .text-muted {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+    color: #ffffff;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+}
+
+[data-theme="dark"] .navbar-brand {
+    color: #60a5fa !important;
+    /* Ensure brand pops */
+}
+
+/* Sidebar Layout Styles */
+#wrapper {
+    overflow-x: hidden;
+}
+
+#sidebar-wrapper {
+    min-height: 100vh;
+    margin-left: -250px;
+    transition: margin 0.25s ease-out;
+}
+
+#sidebar-wrapper .sidebar-heading {
+    padding: 0.875rem 1.25rem;
+    font-size: 1.2rem;
+}
+
+#wrapper.sb-sidenav-toggled #sidebar-wrapper {
+    margin-left: 0;
+}
+
+@media (min-width: 768px) {
+    #sidebar-wrapper {
+        margin-left: 0;
+    }
+
+    #wrapper.sb-sidenav-toggled #sidebar-wrapper {
+        margin-left: -250px;
+    }
+}
+
+/* Sidebar Dark Mode */
+[data-theme="dark"] #sidebar-wrapper {
+    background-color: var(--card-bg) !important;
+    border-right: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .sidebar-heading {
+    background-color: var(--card-bg) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+[data-theme="dark"] .list-group-item-light {
+    background-color: var(--card-bg);
+    color: var(--text-dark);
+}
+
+[data-theme="dark"] .list-group-item-action:hover {
+    background-color: var(--secondary-color);
+    /* Light Highlight */
+    color: var(--text-dark);
+}
+
+/* Page Content Wrapper bg */
+[data-theme="dark"] #page-content-wrapper {
+    background-color: var(--background-light) !important;
+}
+
+[data-theme="dark"] #page-content-wrapper .navbar {
+    background-color: var(--card-bg) !important;
+    border-bottom: 1px solid var(--border-color) !important;
 }

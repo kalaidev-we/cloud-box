@@ -239,13 +239,45 @@ def delete_file(file_id):
     flash('Item deleted', 'success')
     return redirect(url_for('main.dashboard', folder_id=file_record.parent_id))
 
-@main.context_processor
-def inject_storage_usage():
-    if current_user.is_authenticated:
-        my_files = File.query.filter_by(owner_id=current_user.id, is_folder=False).all()
-        used_bytes = sum(f.size for f in my_files)
-        used_mb = round(used_bytes / (1024 * 1024), 2)
-        limit_mb = 1024 # 1GB Limit hardcoded for MVP
-        percentage = round((used_mb / limit_mb) * 100, 1)
-        return dict(storage_used=used_mb, storage_limit=limit_mb, storage_percent=percentage)
-    return dict(storage_used=0, storage_limit=1024, storage_percent=0)
+
+
+@main.route('/friends')
+@login_required
+def friends():
+    users = User.query.filter(User.id != current_user.id).all()
+    my_files = File.query.filter_by(owner_id=current_user.id, is_folder=False).all()
+    return render_template('friends.html', users=users, my_files=my_files)
+
+@main.route('/share_file', methods=['POST'])
+@login_required
+def share_file():
+    username = request.form.get('username')
+    file_id = request.form.get('file_id')
+    role = request.form.get('role', 'viewer')
+    
+    if not username or not file_id:
+        flash('Missing information', 'warning')
+        return redirect(url_for('main.friends'))
+        
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        flash('User not found', 'danger')
+        return redirect(url_for('main.friends'))
+        
+    file = File.query.get_or_404(file_id)
+    if file.owner_id != current_user.id:
+        flash('Permission denied', 'danger')
+        return redirect(url_for('main.friends'))
+        
+    # Check if permission already exists
+    existing_perm = Permission.query.filter_by(file_id=file.id, user_id=user.id).first()
+    if existing_perm:
+        existing_perm.role = role
+        flash(f'Updated permission for {user.username}', 'success')
+    else:
+        perm = Permission(file_id=file.id, user_id=user.id, role=role)
+        db.session.add(perm)
+        flash(f'Shared {file.name} with {user.username}', 'success')
+        
+    db.session.commit()
+    return redirect(url_for('main.friends'))

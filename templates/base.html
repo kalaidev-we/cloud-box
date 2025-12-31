@@ -16,47 +16,90 @@
 
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light">
-        <div class="container">
-            <a class="navbar-brand"
-                href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('auth.login') }}">
-                <i class="fas fa-cloud me-2"></i>CloudBox
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <span class="nav-link">Welcome, {{ current_user.username }}</span>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
-                    </li>
-                    {% endif %}
-                </ul>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="border-end bg-white" id="sidebar-wrapper" style="min-width: 250px; min-height: 100vh;">
+            <div class="sidebar-heading border-bottom bg-light d-flex align-items-center justify-content-center"
+                style="height: 60px;">
+                <a class="text-decoration-none fw-bold text-primary fs-5" href="{{ url_for('main.dashboard') }}">
+                    <i class="fas fa-cloud me-2"></i>CloudBox
+                </a>
+            </div>
+            <div class="list-group list-group-flush pt-3">
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 border-0"
+                    href="{{ url_for('main.dashboard') }}">
+                    <i class="fas fa-tachometer-alt me-2 text-muted"></i> Dashboard
+                </a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 border-0"
+                    href="{{ url_for('main.friends') }}">
+                    <i class="fas fa-user-friends me-2 text-muted"></i> Friends
+                </a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 border-0"
+                    href="{{ url_for('chat.chat_view') }}">
+                    <i class="fas fa-comments me-2 text-muted"></i> Chat
+                </a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 border-0"
+                    href="{{ url_for('main.analytics') }}">
+                    <i class="fas fa-chart-pie me-2 text-muted"></i> Analytics
+                </a>
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 border-0 pointer"
+                    data-bs-toggle="modal" data-bs-target="#settingsModal">
+                    <i class="fas fa-cog me-2 text-muted"></i> Settings
+                </a>
             </div>
         </div>
-    </nav>
 
-    <div class="container mt-4">
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-info alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <!-- Page Content Wrapper -->
+        <div id="page-content-wrapper" class="w-100 bg-light">
+            <!-- Top Navigation -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom py-3 px-4">
+                <div class="container-fluid">
+                    <button class="btn btn-outline-secondary" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#navbarSupportedContent">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto mt-2 mt-lg-0 align-items-center">
+                            {% if current_user.is_authenticated %}
+                            <li class="nav-item">
+                                <span class="nav-link text-dark fw-bold">Welcome, {{ current_user.username }}</span>
+                            </li>
+                            <li class="nav-item ms-2">
+                                <div class="avatar-placeholder bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                    style="width: 35px; height: 35px;">
+                                    {{ current_user.username[0].upper() }}
+                                </div>
+                            </li>
+                            {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-primary text-white px-3"
+                                    href="{{ url_for('auth.login') }}">Login</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <div class="container-fluid p-4">
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
         </div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-
-        {% block content %}{% endblock %}
     </div>
 
     <!-- Settings Modal -->
@@ -78,6 +121,7 @@
                     </div>
 
                     <!-- Storage Quota -->
+                    {% if current_user.is_authenticated %}
                     <div class="mb-3">
                         <label class="form-label fw-bold">Storage Usage</label>
                         <div class="progress mb-1" style="height: 20px;">
@@ -91,8 +135,10 @@
                             <span>{{ storage_limit }} MB limit</span>
                         </small>
                     </div>
+                    {% endif %}
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer justify-content-between">
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -120,6 +166,22 @@
                 localStorage.setItem('theme', 'light');
             }
         });
+
+        // Sidebar Toggle Logic
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', event => {
+                event.preventDefault();
+                document.body.classList.toggle('sb-sidenav-toggled');
+                localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sb-sidenav-toggled'));
+            });
+        }
+
+        // Persist sidebar state
+        const sidebarState = localStorage.getItem('sb|sidebar-toggle');
+        if (sidebarState === 'true') {
+            document.body.classList.add('sb-sidenav-toggled');
+        }
 
         // Initialize Progress Bar
         const progressBar = document.getElementById('storageProgressBar');

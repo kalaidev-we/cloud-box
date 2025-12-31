@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row h-100" style="min-height: 80vh;">
+    <!-- User List -->
+    <div class="col-md-3 border-end">
+        <div class="list-group list-group-flush" id="userList">
+            <!-- Populated by JS -->
+            <div class="text-center p-3">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="col-md-9 d-flex flex-column">
+        <div class="p-3 border-bottom d-none" id="chatHeader">
+            <h5 class="m-0" id="chatTitle">Select a user to chat</h5>
+        </div>
+
+        <div class="flex-grow-1 p-3 overflow-auto" id="messagesArea" style="background-color: var(--background-light);">
+            <div class="text-center text-muted mt-5">
+                <i class="fas fa-comments fa-3x mb-3"></i>
+                <p>Select a user from the left to start messaging.</p>
+            </div>
+        </div>
+
+        <div class="p-3 border-top d-none" id="chatInputArea">
+            <form id="messageForm" class="d-flex gap-2">
+                <input type="text" class="form-control" id="messageInput" placeholder="Type a message..."
+                    autocomplete="off">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentRecipientId = null;
+    let pollInterval = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const users = await loadUsers();
+
+        // Check for user_id in URL params to auto-select
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetUserId = urlParams.get('user_id');
+
+        if (targetUserId && users) {
+            const targetUser = users.find(u => u.id == targetUserId);
+            if (targetUser) {
+                selectUser(targetUser.id, targetUser.username);
+            }
+        }
+
+        // Poll for users status periodically
+        setInterval(loadUsers, 10000);
+    });
+
+    async function loadUsers() {
+        try {
+            const response = await fetch('/chat/api/users');
+            const users = await response.json();
+            const list = document.getElementById('userList');
+
+            // Generate list logic...
+            // We need to return users for the init logic
+
+            // Don't fully redraw if just updating unread counts to keep selection state (simplified for MVP)
+            // For MVP we just redraw but highlight active
+            list.innerHTML = '';
+            users.forEach(user => {
+                const active = currentRecipientId === user.id ? 'active' : '';
+                const badge = user.unread > 0 ? `<span class="badge bg-danger rounded-pill ms-auto">${user.unread}</span>` : '';
+
+                list.innerHTML += `
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center ${active}" 
+                   onclick="selectUser(${user.id}, '${user.username}')">
+                    <div class="avatar-placeholder bg-primary text-white rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                        ${user.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="fw-bold">${user.username}</div>
+                    </div>
+                    ${badge}
+                </a>
+            `;
+            });
+            return users;
+        } catch (e) {
+            console.error('Error loading users:', e);
+            return [];
+        }
+    }
+
+    function selectUser(id, username) {
+        currentRecipientId = id;
+        document.getElementById('chatTitle').innerText = username;
+        document.getElementById('chatHeader').classList.remove('d-none');
+        document.getElementById('chatInputArea').classList.remove('d-none');
+
+        // Refresh user list to show active state
+        loadUsers();
+
+        // Start polling messages
+        if (pollInterval) clearInterval(pollInterval);
+        loadMessages();
+        pollInterval = setInterval(loadMessages, 3000);
+    }
+
+    async function loadMessages() {
+        if (!currentRecipientId) return;
+
+        try {
+            const response = await fetch(`/chat/api/messages/${currentRecipientId}`);
+            const messages = await response.json();
+            const area = document.getElementById('messagesArea');
+
+            // Simple render: clear and redraw (optimizable)
+            area.innerHTML = '';
+            messages.forEach(msg => {
+                const align = msg.is_me ? 'align-self-end' : 'align-self-start';
+                const bg = msg.is_me ? 'bg-primary text-white' : 'bg-white text-dark border';
+
+                // Adjust text color for dark mode if receiving message
+                // We use inline styles or classes for bubble
+
+                const div = document.createElement('div');
+                div.className = `d-flex flex-column ${msg.is_me ? 'align-items-end' : 'align-items-start'} mb-3`;
+                div.innerHTML = `
+                <div class="px-3 py-2 rounded-3 ${msg.is_me ? 'bg-primary text-white' : 'bg-light text-dark shadow-sm'}" style="max-width: 75%;">
+                    ${msg.content}
+                </div>
+                <small class="text-muted mt-1" style="font-size: 0.75rem;">${msg.timestamp}</small>
+            `;
+                area.appendChild(div);
+            });
+
+            // Scroll to bottom
+            area.scrollTop = area.scrollHeight;
+        } catch (e) {
+            console.error('Failed messages', e);
+        }
+    }
+
+    document.getElementById('messageForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('messageInput');
+        const content = input.value.trim();
+        if (!content || !currentRecipientId) return;
+
+        try {
+            await fetch('/chat/api/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    recipient_id: currentRecipientId,
+                    content: content
+                })
+            });
+            input.value = '';
+            loadMessages(); // Instant refresh
+        } catch (e) {
+            alert('Failed to send');
+        }
+    });
+</script>
+{% endblock %}
