@@ -42,6 +42,12 @@
                     href="{{ url_for('main.analytics') }}">
                     <i class="fas fa-chart-pie me-2 text-muted"></i> Analytics
                 </a>
+                {% if current_user.is_admin %}
+                <a class="list-group-item list-group-item-action list-group-item-light p-3 border-0"
+                    href="{{ url_for('admin.dashboard') }}">
+                    <i class="fas fa-user-shield me-2 text-muted"></i> Admin Panel
+                </a>
+                {% endif %}
                 <a class="list-group-item list-group-item-action list-group-item-light p-3 border-0 pointer"
                     data-bs-toggle="modal" data-bs-target="#settingsModal">
                     <i class="fas fa-cog me-2 text-muted"></i> Settings

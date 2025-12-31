@@ -109,21 +109,37 @@ def share_file():
     file_id = request.form.get('file_id')
     username = request.form.get('username')
     role = request.form.get('role')
+    redirect_target = request.form.get('redirect_to')
+    
+    def get_redirect():
+        if redirect_target == 'friends':
+            return redirect(url_for('main.friends'))
+        if file_to_share and file_to_share.parent_id:
+             return redirect(url_for('main.dashboard', folder_id=file_to_share.parent_id))
+        return redirect(url_for('main.dashboard'))
+
+    file_to_share = File.query.get(file_id) # Use get to avoid 404 immediately if we want safer handling, or get_or_404
+    
+    if not file_to_share: 
+        file_to_share = None # Handle for redirect logic if needed, but get_or_404 is standard
+        # However, if 404, we can't redirect to parent_id.
+        # Let's trust get_or_404 but we need to know where to go on error?
+        # If ID invalid, usually we go to root dashboard.
     
     file_to_share = File.query.get_or_404(file_id)
-    
+
     if file_to_share.owner_id != current_user.id:
         flash('Only owner can share', 'danger')
-        return redirect(url_for('main.dashboard', folder_id=file_to_share.parent_id))
+        return get_redirect()
         
     user_to_share_with = User.query.filter_by(username=username).first()
     if not user_to_share_with:
         flash('User not found', 'warning')
-        return redirect(url_for('main.dashboard', folder_id=file_to_share.parent_id))
+        return get_redirect()
         
     if user_to_share_with.id == current_user.id:
         flash('Cannot share with yourself', 'warning')
-        return redirect(url_for('main.dashboard', folder_id=file_to_share.parent_id))
+        return get_redirect()
         
     existing_perm = Permission.query.filter_by(file_id=file_to_share.id, user_id=user_to_share_with.id).first()
     if existing_perm:
@@ -135,7 +151,7 @@ def share_file():
         flash(f'Shared with {username}', 'success')
         
     db.session.commit()
-    return redirect(url_for('main.dashboard', folder_id=file_to_share.parent_id))
+    return get_redirect()
 
 @main.route('/create_folder', methods=['POST'])
 @login_required
@@ -248,36 +264,4 @@ def friends():
     my_files = File.query.filter_by(owner_id=current_user.id, is_folder=False).all()
     return render_template('friends.html', users=users, my_files=my_files)
 
-@main.route('/share_file', methods=['POST'])
-@login_required
-def share_file():
-    username = request.form.get('username')
-    file_id = request.form.get('file_id')
-    role = request.form.get('role', 'viewer')
-    
-    if not username or not file_id:
-        flash('Missing information', 'warning')
-        return redirect(url_for('main.friends'))
-        
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        flash('User not found', 'danger')
-        return redirect(url_for('main.friends'))
-        
-    file = File.query.get_or_404(file_id)
-    if file.owner_id != current_user.id:
-        flash('Permission denied', 'danger')
-        return redirect(url_for('main.friends'))
-        
-    # Check if permission already exists
-    existing_perm = Permission.query.filter_by(file_id=file.id, user_id=user.id).first()
-    if existing_perm:
-        existing_perm.role = role
-        flash(f'Updated permission for {user.username}', 'success')
-    else:
-        perm = Permission(file_id=file.id, user_id=user.id, role=role)
-        db.session.add(perm)
-        flash(f'Shared {file.name} with {user.username}', 'success')
-        
-    db.session.commit()
-    return redirect(url_for('main.friends'))
+

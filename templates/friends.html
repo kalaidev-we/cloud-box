@@ -24,8 +24,8 @@
                             class="btn btn-outline-primary btn-sm flex-grow-1 me-2">
                             <i class="fas fa-comment me-1"></i> Chat
                         </a>
-                        <button class="btn btn-outline-success btn-sm flex-grow-1"
-                            onclick="openShareModalForUser({{ user.id }}, '{{ user.username }}')">
+                        <button class="btn btn-outline-success btn-sm flex-grow-1 share-file-btn"
+                            data-user-id="{{ user.id }}" data-username="{{ user.username }}">
                             <i class="fas fa-share-alt me-1"></i> Share specific file
                         </button>
                     </div>
@@ -47,6 +47,7 @@
             <form action="{{ url_for('main.share_file') }}" method="POST">
                 <div class="modal-body">
                     <input type="hidden" name="username" id="shareWithUsernameInput">
+                    <input type="hidden" name="redirect_to" value="friends">
                     <div class="mb-3">
                         <label class="form-label">Select File to Share</label>
                         <select name="file_id" class="form-select" required>
@@ -74,10 +75,18 @@
 </div>
 
 <script>
-    function openShareModalForUser(userId, username) {
-        document.getElementById('shareWithUsername').innerText = username;
-        document.getElementById('shareWithUsernameInput').value = username;
-        new bootstrap.Modal(document.getElementById('shareFileModal')).show();
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+        const shareButtons = document.querySelectorAll('.share-file-btn');
+        shareButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
+                const userId = this.getAttribute('data-user-id');
+                const username = this.getAttribute('data-username');
+
+                document.getElementById('shareWithUsername').innerText = username;
+                document.getElementById('shareWithUsernameInput').value = username;
+                new bootstrap.Modal(document.getElementById('shareFileModal')).show();
+            });
+        });
+    });
 </script>
 {% endblock %}
