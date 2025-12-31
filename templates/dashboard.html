@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 p-2 bg-light rounded d-flex align-items-center">
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('main.dashboard') }}"><i class="fas fa-home"></i> Home</a>
+                </li>
+                {% for folder in breadcrumbs %}
+                <li class="breadcrumb-item">
+                    <a href="{{ url_for('main.dashboard', folder_id=folder.id) }}">{{ folder.name }}</a>
+                </li>
+                {% endfor %}
+                {% if current_folder %}
+                <li class="breadcrumb-item active" aria-current="page">{{ current_folder.name }}</li>
+                {% endif %}
+                <li class="ms-auto">
+                    <span class="badge bg-success bg-opacity-75"><i class="fas fa-sync fa-spin me-1"></i> Live</span>
+                </li>
+            </ol>
+        </nav>
+    </div>
+    <div class="col-md-4 text-end">
+        <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#newFolderModal">
+            <i class="fas fa-folder-plus"></i> New Folder
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+            <i class="fas fa-cloud-upload-alt"></i> Upload
+        </button>
+    </div>
+</div>
+
+<!-- Shared With Me Section (Only on Root) -->
+{% if not current_folder and shared_files %}
+<div class="card mb-4 border-info">
+    <div class="card-header bg-info text-white">
+        <i class="fas fa-users me-2"></i>Shared with me
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-4">Name</th>
+                        <th scope="col">Owner</th>
+                        <th scope="col">Size</th>
+                        <th scope="col">Date</th>
+                        <th scope="col" class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in shared_files %}
+                    {% include 'file_row.html' %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header bg-light">
+        <i class="fas fa-hdd me-2"></i>{% if current_folder %}Files{% else %}My Files{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col" class="ps-4">Name</th>
+                        <th scope="col">Owner</th>
+                        <th scope="col">Size</th>
+                        <th scope="col">Date</th>
+                        <th scope="col" class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in files %}
+                    {% include 'file_row.html' %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="fas fa-folder-open fa-3x mb-3 d-block"></i>
+                            No files found here
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload File</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('main.upload_file') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" name="parent_id" value="{{ current_folder.id if current_folder else '' }}">
+                    <div class="mb-3">
+                        <label class="form-label">Select File</label>
+                        <input type="file" name="file" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- New Folder Modal -->
+<div class="modal fade" id="newFolderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Folder</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('main.create_folder') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="parent_id" value="{{ current_folder.id if current_folder else '' }}">
+                    <div class="mb-3">
+                        <label class="form-label">Folder Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Share <span id="shareFileName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('main.share_file') }}" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="file_id" id="shareFileId">
+                    <div class="mb-3">
+                        <label class="form-label">Username to share with</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select name="role" class="form-select">
+                            <option value="viewer">Viewer (Read Only)</option>
+                            <option value="editor">Editor (Read/Write)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Share</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openShareModal(fileId, fileName) {
+        document.getElementById('shareFileId').value = fileId;
+        document.getElementById('shareFileName').innerText = fileName;
+        new bootstrap.Modal(document.getElementById('shareModal')).show();
+    }
+
+    // Feature 5: Sync (Smart but Simple)
+    // Refresh less frequently to save bandwidth, but fast enough for 'instant' feel.
+
+    // Restore scroll position
+    document.addEventListener("DOMContentLoaded", function (event) {
+        var scrollpos = sessionStorage.getItem('scrollpos');
+        if (scrollpos) window.scrollTo(0, scrollpos);
+    });
+
+    setInterval(function () {
+        if (!document.querySelector('.modal.show')) {
+            sessionStorage.setItem('scrollpos', window.scrollY);
+            // Add timestamp to prevent caching
+            var url = new URL(window.location.href);
+            url.searchParams.set('t', new Date().getTime());
+            window.location.href = url.toString();
+        }
+    }, 5000); // 5 seconds sync interval
+</script>
+{% endblock %}

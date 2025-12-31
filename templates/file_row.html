@@ -1,0 +1,51 @@
+<tr>
+    <td class="ps-4">
+        <div class="d-flex align-items-center">
+            {% if file.is_folder %}
+            <i class="fas fa-folder fa-lg text-warning me-3"></i>
+            <a href="{{ url_for('main.dashboard', folder_id=file.id) }}"
+                class="text-decoration-none fw-bold text-dark stretched-link">
+                {{ file.name }}
+            </a>
+            {% else %}
+            <i class="fas fa-file fa-lg text-secondary me-3"></i>
+            {{ file.name }}
+            {% endif %}
+        </div>
+    </td>
+    <td>
+        {% if file.owner_id == current_user.id %}
+        <span class="badge bg-success">Me</span>
+        {% else %}
+        <span class="badge bg-info">{{ file.owner.username }}</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if file.is_folder %}
+        -
+        {% else %}
+        {{ (file.size / 1024)|round(1) }} KB
+        {% endif %}
+    </td>
+    <td>{{ file.created_at.strftime('%Y-%m-%d') }}</td>
+    <td class="text-end pe-4 position-relative">
+        <div class="btn-group">
+            {% if not file.is_folder %}
+            <a href="{{ url_for('main.download_file', file_id=file.id) }}"
+                class="btn btn-sm btn-outline-secondary position-relative z-index-2">
+                <i class="fas fa-download"></i>
+            </a>
+            {% endif %}
+            <button class="btn btn-sm btn-outline-primary position-relative z-index-2"
+                onclick="openShareModal('{{ file.id }}', '{{ file.name }}')">
+                <i class="fas fa-share-alt"></i>
+            </button>
+            <form action="{{ url_for('main.delete_file', file_id=file.id) }}" method="POST" class="d-inline"
+                onsubmit="return confirm('Delete this item?');">
+                <button type="submit" class="btn btn-sm btn-outline-danger position-relative z-index-2">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
+    </td>
+</tr>

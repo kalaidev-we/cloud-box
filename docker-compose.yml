@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: cloud-storage
+    ports:
+      - "5001:5001"
+    volumes:
+      - cloud_data:/app/storage
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=prod-secret-key-change-this
+    restart: unless-stopped
+    networks:
+      - cloud-net
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflare-tunnel
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    # To run without token env var (authed via login), different setup needed.
+    # Token method is easiest for persistent docker deployment.
+    networks:
+      - cloud-net
+
+volumes:
+  cloud_data:
+
+
+networks:
+  cloud-net:
